@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-# imports to allow running of shell commands
+# script contains some Linux specific commands
+# run the script from a folder containing ping.txt which should contain list of items/ FQDNs to ping
+# imports to allow running of shell commands, file access and regex check
 #
 from __future__ import print_function
 import os
 import subprocess
 import re
-
-
 
 # terminal colour text codes (found via a so page)
 class bcolors:
@@ -16,6 +16,7 @@ class bcolors:
     END = '\033[0m'
     vmTag = ''
 
+# ping the name and return the results for parsing
 def pingItem(pinginput):
   pingResult = subprocess.run(['ping', '-c 2', pinginput], capture_output=True, text=True)
   if (pingResult.stderr != ""):
@@ -25,6 +26,7 @@ def pingItem(pinginput):
 
 def main():
   if (os.path.isfile('ping.txt')):
+    # ipv4 regex check
     ip4Regex = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
     os.system('clear')
     print("################################")
@@ -34,23 +36,25 @@ def main():
     resolving = []
     resolvingTo = []
     notResolving = []    
-    bcolorsTag = [] 
+    bcolorsTag = []
+
+    # can set a failsafe to prevent indefinite running of the script
+    # for my use case ctrl+c will be used to quit once propagation has complete
     i = 0
-    while (i < 5):
+    while (i < 100):
 
       with open('ping.txt') as items:
         allItems = items.readlines()
         itemsCount = len(allItems)
+        
+        # setup a counter to use to refer back to previous run
+        w=0
  
-
-        #print("%s" % allItems[itemsCount-1])
-
-
-
         for item in allItems:
           pingResult = pingItem(item.rstrip())
           for pingResultLine in pingResult.splitlines():
             if ("bytes" in pingResultLine):
+              
               for word in pingResultLine.split():
                 cleanWord = word.strip("()")
                 if (ip4Regex.match(cleanWord)):
@@ -59,26 +63,29 @@ def main():
                   resolvingTo.append(cleanWord)
                   notResolving.append("empty")
 
+                  # skip check on first run and set colour to amber
                   if (i > 0):
-                    print(resolvingTo[(i * itemsCount)-itemsCount])
-                    print(cleanWord)
-                    if (resolvingTo[(i * itemsCount)-itemsCount] == cleanWord):
-                      bcolorsTag.append("\033[93m")
+                    # compare previous run IP to current IP
+                    if (resolvingTo[(i * itemsCount)-itemsCount+w] == cleanWord):
+                      # if IPs match set colour the same as previous run
+                      bcolorsTag.append(bcolorsTag[(i * itemsCount)-itemsCount+w])
                     else:
+                      # if IPs differ set colout to green
                       bcolorsTag.append("\033[92m")
                   else:
                     bcolorsTag.append("\033[93m")
 
             elif ("not known" in pingResultLine):
-              #print("## %s not resolving " %item.rstrip())
               # append to all arrays to keep index in sync
               notResolving.append(item.rstrip())
               resolving.append("empty")
               resolvingTo.append("empty")
               bcolorsTag.append("\033[93m")
-        
+
+          # increment counter used to refer back to previous run 
+          w+=1         
         # clear screen each time just before printing latest info
-        #os.system('clear')
+        os.system('clear')
         # set default colour for the list of VMs to amber
         bcolors.vmTag='\033[93m'
         print("################################")
@@ -86,17 +93,15 @@ def main():
         # only print the last results info
         for x in range(i*itemsCount, len(resolving)):
           if (not "empty" in resolving[x]):
-            print("## %s resolving to: %s %s %s %s" %(resolving[x], bcolorsTag[x], resolvingTo[x], bcolors.END, x))
+            print("## %s resolving to: %s %s %s" %(resolving[x], bcolorsTag[x], resolvingTo[x], bcolors.END))
           else:
-            print("## %s is not resolving %s " %(notResolving[x], i))
+            print("## %s is not resolving!" %notResolving[x])
       
+      # increment counter used to control amount of runs
       i+=1
-
-  
+    print(changeCounter)
   else:
     print("Please ensure ping.txt exists in this scripts folder.")
-
-
 
 if __name__ == '__main__':
     main()
