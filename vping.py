@@ -37,6 +37,7 @@ def main():
     resolvingTo = []
     notResolving = []    
     bcolorsTag = []
+    changeCount = []
 
     # can set a failsafe to prevent indefinite running of the script
     # for my use case ctrl+c will be used to quit once propagation has complete
@@ -58,7 +59,6 @@ def main():
               for word in pingResultLine.split():
                 cleanWord = word.strip("()")
                 if (ip4Regex.match(cleanWord)):
-                  #print("## %s resolving to: %s " %(item.rstrip(), cleanWord))
                   resolving.append(item.rstrip())
                   resolvingTo.append(cleanWord)
                   notResolving.append("empty")
@@ -69,11 +69,14 @@ def main():
                     if (resolvingTo[(i * itemsCount)-itemsCount+w] == cleanWord):
                       # if IPs match set colour the same as previous run
                       bcolorsTag.append(bcolorsTag[(i * itemsCount)-itemsCount+w])
+                      changeCount.append(0 + int(changeCount[(i * itemsCount)-itemsCount+w]))
                     else:
                       # if IPs differ set colout to green
                       bcolorsTag.append("\033[92m")
+                      changeCount.append(1 + int(changeCount[(i * itemsCount)-itemsCount+w]))
                   else:
                     bcolorsTag.append("\033[93m")
+                    changeCount.append(0)
 
             elif ("not known" in pingResultLine):
               # append to all arrays to keep index in sync
@@ -81,6 +84,7 @@ def main():
               resolving.append("empty")
               resolvingTo.append("empty")
               bcolorsTag.append("\033[93m")
+              changeCount.append(0)
 
           # increment counter used to refer back to previous run 
           w+=1         
@@ -93,7 +97,7 @@ def main():
         # only print the last results info
         for x in range(i*itemsCount, len(resolving)):
           if (not "empty" in resolving[x]):
-            print("## %s resolving to: %s %s %s" %(resolving[x], bcolorsTag[x], resolvingTo[x], bcolors.END))
+            print("## %s resolving to: %s %s %s - (%s)" %(resolving[x], bcolorsTag[x], resolvingTo[x], bcolors.END, changeCount[x]))
           else:
             print("## %s is not resolving!" %notResolving[x])
       
