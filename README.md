@@ -13,7 +13,7 @@ The idea is for future such sessions we can have the script running against the 
 ## Notes
 * Currently only runs on Linux as there are some OS specific commands
 * There's a while loop set to 100 runs to prevent the script running indefinitely
-* At the moment once an IP changes it goes green, if for some reason it changes again it will stay green, this is not an issue for my current use case although I might add a counter or something just to highlight multiple changes.
+* At the moment once an IP changes it goes green, if for some reason it changes again it will stay green, this is not an issue for my current use case although I have added a counter to highlight multiple changes.
 
 
 ![](vping.png)
