@@ -55,7 +55,7 @@ def main():
           pingResult = pingItem(item.rstrip())
           for pingResultLine in pingResult.splitlines():
             if ("bytes" in pingResultLine):
-              
+              # search for word bytes in response and parse the ip address from the line if found
               for word in pingResultLine.split():
                 cleanWord = word.strip("()")
                 if (ip4Regex.match(cleanWord)):
@@ -103,7 +103,6 @@ def main():
       
       # increment counter used to control amount of runs
       i+=1
-    print(changeCounter)
   else:
     print("Please ensure ping.txt exists in this scripts folder.")
 
